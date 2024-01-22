@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import einops
 
-from fusecam import space
+from fusecam.geometric import space
 
 import pytest
 

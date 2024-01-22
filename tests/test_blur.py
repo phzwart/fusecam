@@ -3,7 +3,7 @@ import torch
 import einops
 
 import matplotlib.pyplot as plt
-from fusecam import blur
+from fusecam.manipimg import blur
 
 from scipy.ndimage import gaussian_filter
 
@@ -21,7 +21,7 @@ def test_3d():
 
     for sigma in sigmas:
         for window in windows:
-            tmp = blur.GaussianBlur3D(sigma,window)(img)
+            tmp = blur.GaussianBlur3D(sigma, window)(img)
             tmp2 = gaussian_filter(img[0].numpy(), sigma)
             d = np.abs( tmp.detach().numpy() - tmp2 ) / (tmp2+eps)
             d = d*mask
@@ -40,7 +40,7 @@ def test_2d():
 
     for sigma in sigmas:
         for window in windows:
-            tmp = blur.GaussianBlur2D(sigma,window)(img)
+            tmp = blur.GaussianBlur2D(sigma, window)(img)
             tmp2 = gaussian_filter(img[0].numpy(), sigma)
             d = np.abs( tmp.detach().numpy() - tmp2 ) / (tmp2+eps)
             d = d*mask
