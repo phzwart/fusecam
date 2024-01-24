@@ -102,16 +102,18 @@ class Plane3DAligner:
         aligned_points += self.point_on_plane
 
         return aligned_points
-    
-    def transform_3d_to_plane(self, points_3d):
+
+    def transform_3d_to_plane(self, points_3d, point_on_plane_2D, rotation_angle):
         """
-        Transforms 3D points back into the 2D plane coordinates.
+        Transforms 3D points back into the 2D plane coordinates, including the z-component.
 
         Parameters:
             points_3d (array-like): Points in 3D coordinates.
+            point_on_plane_2D (array-like): The shift that was applied to the 2D points.
+            rotation_angle (float): The rotation angle that was applied to the 2D points.
 
         Returns:
-            torch.Tensor: Points in 2D plane coordinates.
+            torch.Tensor: Points in 2D plane coordinates with the z-component.
         """
         # Convert points_3d to tensor if it's not already
         points_3d = torch.Tensor(points_3d)
@@ -120,13 +122,21 @@ class Plane3DAligner:
         translated_points = points_3d - self.point_on_plane
 
         # Apply the inverse rotation (transpose of the rotation matrix)
-        # since rotation_matrix is orthogonal
         rotated_points = torch.matmul(self.rotation_matrix.t(), translated_points.T).T
 
-        # Project the points onto the 2D plane (ignore z component)
-        plane_points = rotated_points[:, :2]
+        # Apply the inverse of the in-plane rotation
+        angle_rad = np.radians(rotation_angle)
+        inverse_plane_rotation = torch.Tensor([
+            [np.cos(angle_rad), np.sin(angle_rad)],
+            [-np.sin(angle_rad), np.cos(angle_rad)]
+        ])
+        derotated_points = torch.matmul(inverse_plane_rotation, rotated_points[:, :2].T).T
 
-        return plane_points
+        # Reverse the shift applied to the 2D points and include z-component
+        unshifted_points = derotated_points + torch.Tensor(point_on_plane_2D)
+        final_points = torch.cat((unshifted_points, rotated_points[:, 2].unsqueeze(1)), dim=1)
+
+        return final_points
 
 
 if __name__ == "__main__":
