@@ -53,9 +53,4 @@ def test_inverse_distance_weighting_with_weights():
     funct = 1.0 + target_coords[:,0]**2 + target_coords[:,1]**2 + target_coords[:,2]**2
     funct = einops.rearrange(funct, "(X Y)-> X Y", Y=100, X=100 ).numpy()
     assert np.max( (np.abs(interpolated_values - funct)) / funct )  < 5e-2
-    # Additional checks can be added for expected behavior (e.g., NaN handling)
 
-if __name__ == "__main__":
-    test_find_nearest()
-    test_compute_weights()
-    test_inverse_distance_weighting_with_weights()
