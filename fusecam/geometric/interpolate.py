@@ -1,25 +1,23 @@
 import torch
-
+import faiss
+import numpy as np
 
 def find_nearest(template_tensor, target_tensor, N):
-    """
-    Finds the N nearest neighbors for each point in the target tensor from the template tensor.
+    # Convert PyTorch tensors to NumPy arrays and ensure they are C-contiguous
+    template_np = np.ascontiguousarray(template_tensor.detach().numpy())
+    target_np = np.ascontiguousarray(target_tensor.detach().numpy())
 
-    Args:
-        template_tensor (torch.Tensor): A tensor of shape (M, 3) representing M points in 3D space.
-        target_tensor (torch.Tensor): A tensor of shape (N, 3) representing N points in 3D space.
-        N (int): The number of nearest neighbors to find.
+    # Create a FAISS index
+    dimension = template_np.shape[1]  # Assuming 3D points
+    index = faiss.IndexFlatL2(dimension)
 
-    Returns:
-        torch.Tensor, torch.Tensor: Two tensors representing the indices and distances of the N nearest neighbors.
-    """
-    # Calculate distances
-    distances = torch.cdist(target_tensor, template_tensor, p=2)  # p=2 for Euclidean distance
-    # Find the indices of the N nearest points
-    indices = torch.topk(distances, N, largest=False, sorted=True).indices
-    nearest_distances = torch.topk(distances, N, largest=False, sorted=True).values
+    # Add the template tensor to the index
+    index.add(template_np)
 
-    return indices, nearest_distances
+    # Search for the nearest neighbors
+    distances, indices = index.search(target_np, N)
+
+    return torch.tensor(indices), torch.tensor(distances)
 
 
 def compute_weights(nearest_distances, power=2.0, cutoff=None):
