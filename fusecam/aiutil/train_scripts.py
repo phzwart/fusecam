@@ -6,12 +6,12 @@ from torch.utils.data import TensorDataset, DataLoader
 import torch.nn as nn
 import torch.optim as optim
 
-def train_volume_and_slice(net, 
-                           loss_function, 
-                           optimizer, 
-                           dataloader, 
-                           num_epochs, 
-                           interpolate_function, 
+def train_volume_on_slice(net,
+                           loss_function,
+                           optimizer,
+                           dataloader,
+                           num_epochs,
+                           interpolate_function,
                            device='cuda:0'):
     """
     Train a neural network on 3D and corresponding 2D image data.
