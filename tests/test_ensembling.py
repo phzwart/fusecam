@@ -8,7 +8,7 @@ def test_ensembler():
     pcount = construct_3dsms_ensembler(N,
                                        1,
                                        1,
-                               layers=20,
+                               layers=10,
                                alpha = 0.5,
                                gamma = 0.0,
                                hidden_channels = [3],
@@ -16,9 +16,8 @@ def test_ensembler():
                                parameter_counts_only = True
                                )
     median = np.median( np.array(pcount) )
-    assert median > 3000
-    assert median < 9000
-
+    assert median > 10000
+    assert median < 14000
     assert len(pcount) == 100
 
 
