@@ -19,7 +19,6 @@ def find_nearest(template_tensor, target_tensor, N):
 
     return torch.tensor(indices), torch.tensor(distances)
 
-
 def compute_weights(nearest_distances, power=2.0, cutoff=None):
     """
     Computes the weights for inverse distance weighting using a given power parameter and applies a distance cutoff.
