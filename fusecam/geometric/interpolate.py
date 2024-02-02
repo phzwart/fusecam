@@ -87,7 +87,7 @@ def inverse_distance_weighting_with_weights_SC(template_values, nearest_indices,
 
 def inverse_distance_weighting_with_weights_MC(template_values, nearest_indices, weights):
     """
-    Adjusted to support input shapes and return a (C, K) tensor.
+    Adjusted to support input shapes and return a (K, C) tensor.
 
     Args:
         template_values (torch.Tensor): Shape (M, C), values for each template point.
@@ -95,7 +95,7 @@ def inverse_distance_weighting_with_weights_MC(template_values, nearest_indices,
         weights (torch.Tensor): Shape (K, nearest), weights for each of the nearest neighbors.
 
     Returns:
-        torch.Tensor: Shape (C, K), interpolated values for each feature across all targets.
+        torch.Tensor: Shape (K, C), interpolated values for each feature across all targets.
     """
     # Ensure weights sum to 1 across the nearest dimension for proper interpolation
     normalized_weights = weights / weights.sum(dim=1, keepdim=True)
@@ -107,9 +107,6 @@ def inverse_distance_weighting_with_weights_MC(template_values, nearest_indices,
     # Perform weighted sum across the nearest neighbors, resulting in shape (K, C)
     # We use einsum for better control over the multiplication and summation axes
     interpolated_values = torch.einsum('knc,kn->kc', template_values_selected, normalized_weights)
-
-    # Transpose the result to get shape (C, K)
-    # interpolated_values = interpolated_values.transpose(0, 1)
 
     return interpolated_values
 
