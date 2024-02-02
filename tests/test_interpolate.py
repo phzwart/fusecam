@@ -76,6 +76,3 @@ def test_inverse_distance_weighting_with_weights_2():
     assert np.max( (np.abs(interpolated_values[0] - funct_1)) / funct_1 )  < 5e-2
     assert np.max( (np.abs(interpolated_values[1] - funct_2)) / funct_2 )  < 5e-2
 
-
-if __name__ == "__main__":
-    test_inverse_distance_weighting_with_weights_2()
