@@ -44,10 +44,10 @@ def test_2d():
             tmp2 = gaussian_filter(img[0].numpy(), sigma)
             d = np.abs( tmp.detach().numpy() - tmp2 ) / (tmp2+eps)
             d = d*mask
-            print(sigma, window, window/sigma, np.max(d) )
-            plt.imshow(tmp.detach().numpy()[0])
-            plt.show()
-            input()
+            #print(sigma, window, window/sigma, np.max(d) )
+            #plt.imshow(tmp.detach().numpy()[0])
+            #plt.show()
+            #input()
 
             if window / sigma >  threshold:
                 assert np.max(d) < 1.0e-2

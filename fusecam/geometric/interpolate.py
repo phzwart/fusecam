@@ -68,7 +68,7 @@ def compute_weights(nearest_distances, power=2.0, cutoff=None):
     return weights
 
 
-def inverse_distance_weighting_with_weights(template_values, nearest_indices, weights):
+def inverse_distance_weighting_with_weights_SC(template_values, nearest_indices, weights):
     """
     Performs inverse distance weighting interpolation using precomputed weights.
 
@@ -84,3 +84,38 @@ def inverse_distance_weighting_with_weights(template_values, nearest_indices, we
     interpolated_values = torch.sum(template_values[nearest_indices] * weights, axis=1)
 
     return interpolated_values
+
+def inverse_distance_weighting_with_weights_MC(template_values, nearest_indices, weights):
+    """
+    Adjusted to support input shapes and return a (C, K) tensor.
+
+    Args:
+        template_values (torch.Tensor): Shape (M, C), values for each template point.
+        nearest_indices (torch.Tensor): Shape (K, nearest), indices of nearest points for each target.
+        weights (torch.Tensor): Shape (K, nearest), weights for each of the nearest neighbors.
+
+    Returns:
+        torch.Tensor: Shape (C, K), interpolated values for each feature across all targets.
+    """
+    # Ensure weights sum to 1 across the nearest dimension for proper interpolation
+    normalized_weights = weights / weights.sum(dim=1, keepdim=True)
+
+    # Select the nearest template values for each target point
+    # template_values_selected shape will be (K, nearest, C)
+    template_values_selected = template_values[nearest_indices]
+
+    # Perform weighted sum across the nearest neighbors, resulting in shape (K, C)
+    # We use einsum for better control over the multiplication and summation axes
+    interpolated_values = torch.einsum('knc,kn->kc', template_values_selected, normalized_weights)
+
+    # Transpose the result to get shape (C, K)
+    # interpolated_values = interpolated_values.transpose(0, 1)
+
+    return interpolated_values
+
+def inverse_distance_weighting_with_weights(template_values, nearest_indices, weights):
+    if len(template_values.shape) == 1:
+        return inverse_distance_weighting_with_weights_SC(template_values, nearest_indices, weights)
+    else:
+        return inverse_distance_weighting_with_weights_MC(template_values, nearest_indices, weights)
+
