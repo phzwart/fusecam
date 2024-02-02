@@ -54,3 +54,28 @@ def test_inverse_distance_weighting_with_weights():
     funct = einops.rearrange(funct, "(X Y)-> X Y", Y=100, X=100 ).numpy()
     assert np.max( (np.abs(interpolated_values - funct)) / funct )  < 5e-2
 
+
+def test_inverse_distance_weighting_with_weights_2():
+    grid, values_1 = create_3D_grid()
+    values_2 = values_1*5 + 5
+    values = torch.concat( [values_1.unsqueeze(0), values_2.unsqueeze(0)])
+    values = einops.rearrange(values, "C N -> N C")
+    #values = einops.rearrange(values, "N -> N ()")
+    target_coords = create_target_coords()
+    indices, distances = find_nearest(grid, target_coords, 12)
+    weights = compute_weights(distances, power=2.0, cutoff=0.15)
+    interpolated_values = inverse_distance_weighting_with_weights(values, indices, weights)
+    import matplotlib.pyplot as plt
+    interpolated_values = einops.rearrange(interpolated_values, "(X Y) N -> N X Y", Y=100, X=100 ).numpy()
+
+    funct_1 = 1.0 + target_coords[:,0]**2 + target_coords[:,1]**2 + target_coords[:,2]**2
+    funct_1 = einops.rearrange(funct_1, "(X Y)-> X Y", Y=100, X=100 ).numpy()
+
+    funct_2 = funct_1*5+5
+    print(interpolated_values.shape)
+    assert np.max( (np.abs(interpolated_values[0] - funct_1)) / funct_1 )  < 5e-2
+    assert np.max( (np.abs(interpolated_values[1] - funct_2)) / funct_2 )  < 5e-2
+
+
+if __name__ == "__main__":
+    test_inverse_distance_weighting_with_weights_2()
