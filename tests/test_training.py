@@ -129,12 +129,17 @@ def test_3d_mapping_test():
     for net in networks:
         loss_function = nn.MSELoss()
         optimizer = optim.Adam(net.parameters(), lr=0.001)
+
+        device = 'cpu'
+        if torch.cuda.is_available():
+            device='cuda'
+
         train_scripts.train_volume_on_slice(net,
                                             loss_function,
                                             optimizer,
                                             data_loader,
                                             250,
-                                            interpolate.inverse_distance_weighting_with_weights, device='cuda:0')
+                                            interpolate.inverse_distance_weighting_with_weights, device=device)
 
     m = 0.0
     s = 0.0

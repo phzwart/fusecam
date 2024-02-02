@@ -41,6 +41,8 @@ def train_volume_on_slice(net,
             outputs = net(img_tensor_3d)
             loss = 0.0
             for img3d, img2d, ws, idx in zip(outputs, flat_2d_tensor, weights, indices):
+                if len(img2d.shape) == 1:
+                    img2d = img2d.unsqueeze(-1)
                 img_flat = einops.rearrange( img3d, "C X Y Z -> (X Y Z) C")
                 interp = interpolate_function(img_flat, idx, ws)
                 not_nan_sel = ~torch.isnan(interp)
@@ -57,5 +59,4 @@ def train_volume_on_slice(net,
 
         # Print statistics
         print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(dataloader)}")
-
-
+    
