@@ -28,26 +28,19 @@ def test_3d_mapping_mc():
     class_map_low = mm3d.blur_it(class_map_0, sigma=sigma_low)
     class_map_high = mm3d.blur_it(class_map_0, sigma=sigma_high)
 
-
-
-
     tomo_class_0 = np.array([0])
     tomo_class_1 = np.array([2.00])
     tomo_class_2 = np.array([4.00])
 
     class_actions_tomo = np.column_stack([tomo_class_0, tomo_class_1, tomo_class_2]).T
 
-
-
-    spectral_class_0 = np.array([1.0,0.0,0.0])
-    spectral_class_1 = np.array([0.0,1.0,0.0])
-    spectral_class_2 = np.array([0.0,0.0,1.0])
+    spectral_class_0 = np.array([1.0, 0.0, 0.0])
+    spectral_class_1 = np.array([0.0, 1.0, 0.0])
+    spectral_class_2 = np.array([0.0, 0.0, 1.0])
 
     class_actions_spec = np.column_stack([spectral_class_0,
                                           spectral_class_1,
-                                          spectral_class_2,]).T
-
-
+                                          spectral_class_2, ]).T
 
     low_map = mm3d.compute_weighted_map(class_map_low, class_actions_tomo)
     high_map = mm3d.compute_weighted_map(class_map_high, class_actions_spec)
@@ -65,14 +58,11 @@ def test_3d_mapping_mc():
                                             orientation=torch.eye(2),
                                             translation=(0, 0))
 
-
-
     # Define plane and align points (omitted for brevity)
     u = torch.linspace(0, scale - 1, scale)
     U, V = torch.meshgrid(u, u, indexing='ij')
     UV = torch.concat([U.flatten().reshape(1, -1), V.flatten().reshape(1, -1)]).T
     UV = plane_object.to_plane_coordinates(UV)
-
 
     x = torch.linspace(0, scale - 1, scale)
     X, Y, Z = torch.meshgrid(x, x, x, indexing="ij")
@@ -110,7 +100,7 @@ def test_3d_mapping_mc():
     weights_3 = interpolate.compute_weights(near_dist_3, power=3.0, cutoff=2.0)
 
     # Interpolate and create dataset (omitted for brevity)
-    flat_high_map = einops.rearrange( torch.Tensor(high_map), "C X Y Z -> (X Y Z) C ")
+    flat_high_map = einops.rearrange(torch.Tensor(high_map), "C X Y Z -> (X Y Z) C ")
     gt_1 = interpolate.inverse_distance_weighting_with_weights(flat_high_map,
                                                                indices_1,
                                                                weights_1)
@@ -126,7 +116,7 @@ def test_3d_mapping_mc():
     my_2d_maps = torch.concat([gt_1,
                                gt_2,
                                gt_3
-                              ]).unsqueeze(0)
+                               ]).unsqueeze(0)
 
     my_weights = torch.concat([weights_1, weights_2, weights_3]).unsqueeze(0)
 
@@ -153,7 +143,7 @@ def test_3d_mapping_mc():
 
         device = 'cpu'
         if torch.cuda.is_available():
-            device='cuda'
+            device = 'cuda'
 
         train_scripts.train_volume_on_slice(net,
                                             loss_function,
@@ -172,26 +162,22 @@ def test_3d_mapping_mc():
                                             interpolate.inverse_distance_weighting_with_weights, device=device)
 
     m = 0.0
-    s = 0.0
     with torch.no_grad():
         for net in networks:
             tmp3 = net.cpu()(torch.Tensor(low_map).unsqueeze(0))
             m += tmp3
-            s += tmp3 ** 2.0
 
     m = m / n_networks
-    s = torch.sqrt(s / n_networks - m * m)
 
-    a = m.numpy()[0,0].flatten()
+    a = m.numpy()[0, 0].flatten()
     b = high_map[0].flatten()
     ab0 = np.corrcoef(a, b)[0, 1]
 
-    a = m.numpy()[0,1].flatten()
+    a = m.numpy()[0, 1].flatten()
     b = high_map[1].flatten()
     ab1 = np.corrcoef(a, b)[0, 1]
 
-
-    a = m.numpy()[0,2].flatten()
+    a = m.numpy()[0, 2].flatten()
     b = high_map[2].flatten()
     ab2 = np.corrcoef(a, b)[0, 1]
 
@@ -204,7 +190,5 @@ def test_3d_mapping_mc():
     assert ab2 > 0.90
 
 
-
 if __name__ == "__main__":
     test_3d_mapping_mc()
-
