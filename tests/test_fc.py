@@ -1,5 +1,5 @@
 import pytest
-from fusecam.aiutil.fcnetwork import FCNetworkND
+from fusecam.models.fcnetwork import FCNetworkND
 import torch
 import einops
 
