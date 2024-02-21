@@ -57,3 +57,29 @@ def train_volume_on_slice(net,
 
         # Print statistics
         print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(dataloader)}")
+
+
+def train_slice_on_slice(net, loss_function, smooth_loss,
+                         optimizer, dataloader, num_epochs, smooth_weight, device='cuda:0'):
+    net.to(device)  # Move the network to the specified device
+    net.train()  # Set the network to training mode
+
+    for epoch in range(num_epochs):
+        running_loss = 0.0
+        for batch in dataloader:
+            in_img, target_img = batch
+            in_img, target_img = in_img.to(device), target_img.to(device)  # Move inputs and targets to the device
+
+            # Forward pass
+            mock_xct, outputs = net(in_img)
+            loss = loss_function(outputs, target_img) + smooth_weight*smooth_loss(mock_xct) # Calculate the loss
+
+            # Backward and optimize
+            optimizer.zero_grad()  # Clear gradients for the next train steps
+            loss.backward()  # Backpropagation
+            optimizer.step()  # Apply gradients
+
+            running_loss += loss.item()
+
+        # Print statistics
+        print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(dataloader)}")
