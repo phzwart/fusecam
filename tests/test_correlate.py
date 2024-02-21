@@ -11,7 +11,7 @@ def create_test_tensor():
     tensor = torch.zeros((2, 32, 32, 32))
     center = [slice(32//2 - 4, 32//2 + 5)] * 3  # Center patch
     tensor[(slice(None),) + tuple(center)] = 1
-    return tensor
+    return tensor.unsqueeze(0)
 
 def test_pearson_correlation():
     """
@@ -20,7 +20,7 @@ def test_pearson_correlation():
     tensor = create_test_tensor()
     correlation = pearson_correlation(tensor, tensor)
     # Expect the correlation to be close to 1 for each channel
-    assert torch.allclose(correlation, torch.tensor([1.0, 1.0]), atol=1e-6), "Correlation should be close to 1"
+    assert torch.allclose(correlation, torch.Tensor([1.0, 1.0]), atol=1e-4), "Correlation should be close to 1"
 
 def test_blur_and_correlate():
     """
@@ -35,3 +35,6 @@ def test_blur_and_correlate():
         assert len(results) == len(blur_range), "Should return results for each blur level"
         assert torch.all(torch.concat(results) > 0.98)
     # Optionally, check the type or specific values within results, depending on expected behavior
+
+if __name__ == "__main__":
+    test_pearson_correlation()

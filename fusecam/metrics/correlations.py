@@ -1,6 +1,7 @@
 import torch
 from fusecam.manipimg import blur
 import numpy as np
+import einops
 
 def pearson_correlation(tensor1, tensor2):
     """
@@ -31,18 +32,16 @@ def pearson_correlation(tensor1, tensor2):
     assert tensor1.dim() == 5, "Dimension should be 5. Check Input"
 
     # Compute means and standard deviations over N, X, Y, Z, keeping the channel dimension
-    mean1 = tensor1.mean(dim=(0, 2, 3, 4), keepdim=True)
-    mean2 = tensor2.mean(dim=(0, 2, 3, 4), keepdim=True)
-    std1 = tensor1.std(dim=(0, 2, 3, 4), keepdim=True, unbiased=False)
-    std2 = tensor2.std(dim=(0, 2, 3, 4), keepdim=True, unbiased=False)
 
+    tensor1 = einops.rearrange(tensor1, "N C X Y Z -> (N X Y Z) C ")
+    tensor2 = einops.rearrange(tensor2, "N C X Y Z -> (N X Y Z) C ")
+    mean1 = tensor1.mean(dim=0)
+    mean2 = tensor2.mean(dim=0)
+    std1 = tensor1.std(dim=0)
+    std2 = tensor2.std(dim=0)
     # Compute Pearson correlation coefficient per channel
-    covariance = ((tensor1 - mean1) * (tensor2 - mean2)).mean(dim=(0, 2, 3, 4))
+    covariance = ((tensor1 - mean1.unsqueeze(0)) * (tensor2 - mean2.unsqueeze(0))).mean(dim=0)
     correlation = covariance / (std1 * std2)
-
-    # Squeeze to remove dimensions of size 1, getting the correlation per channel
-    correlation = correlation.squeeze()
-
     return correlation
 
 def blur_and_correlate(to_blur, not_to_blur, blur_range=np.arange(0, 5.25, 0.25)):
@@ -59,13 +58,14 @@ def blur_and_correlate(to_blur, not_to_blur, blur_range=np.arange(0, 5.25, 0.25)
     - (np.ndarray, list): A tuple containing the array of sigma values used for blurring and a list of 1D tensors representing
       the Pearson correlation coefficient for each channel and blur level.
     """
-    results = []
-    for sigma in blur_range:
-        blurrer = blur.GaussianBlur3D(initial_sigma=sigma)
-        blurred = torch.stack([blurrer(m.unsqueeze(0))[0] for m in to_blur])
-        ccs = pearson_correlation(blurred, not_to_blur)
-        results.append(ccs)
-    return blur_range, results
+    with torch.no_grad():
+        results = []
+        for sigma in blur_range:
+            blurrer = blur.GaussianBlur3D(initial_sigma=sigma)
+            blurred = torch.stack([blurrer(m.unsqueeze(0))[0] for m in to_blur])
+            ccs = pearson_correlation(blurred, not_to_blur)
+            results.append(ccs)
+        return blur_range, results
 
 
 
